@@ -1,0 +1,65 @@
+backend:
+  restart: always
+  build:
+    ./backend/
+  environment:
+    - HOST=0.0.0.0
+    - NODE_ENV=development
+  command:
+    "npm run develop"
+  env_file:
+    - .env
+  volumes:
+    - ./backend/src:/usr/src/app/src
+    - ./backend/config:/usr/src/app/config
+  links:
+    - postgres
+  ports:
+    - "1337:1337"
+
+
+fullbackend:
+  restart: always
+  build:
+    ./fullbackend/
+  environment:
+    - HOST=0.0.0.0
+    - NODE_ENV=development
+  command:
+    "npm run start"
+  env_file:
+    - .env
+  ports:
+    - "3000:3000"
+
+
+nginx:
+  restart: always
+  build: ./nginx/
+  ports:
+    - "80:80"
+  links:
+    - backend
+    - fullbackend
+    - frontend
+
+postgres:
+  restart: always
+  volumes:
+    - ./data:/var/lib/postgresql/data
+  image: postgres
+  ports:
+    - "5435:5432"
+  env_file:
+    - .env
+
+frontend:
+  restart: always
+  build:
+    ./app/
+  environment:
+    - HOST=0.0.0.0
+  command:
+    "npm run start"
+  links:
+    - backend
